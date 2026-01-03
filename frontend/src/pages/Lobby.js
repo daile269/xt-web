@@ -13,8 +13,32 @@ const Lobby = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [loading, setLoading] = useState(false);
-  const { user, updateUser, token } = useAuthStore();
+  const { updateUser, token } = useAuthStore();
   const navigate = useNavigate();
+
+  const loadRooms = async () => {
+    setLoading(true);
+    try {
+      const response = await roomAPI.getRooms(filter);
+      setRooms(response.data.rooms);
+    } catch (error) {
+      toast.error('Không thể tải danh sách phòng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const connectSocket = () => {
+    socketService.connect(token);
+
+    socketService.on('room-created', (room) => {
+      loadRooms(); // Reload instead of adding to prevent duplicates
+    });
+
+    socketService.on('online-users', (count) => {
+      setOnlineUsers(count);
+    });
+  };
 
   useEffect(() => {
     loadRooms();
@@ -30,36 +54,14 @@ const Lobby = () => {
       socketService.removeAllListeners('online-users');
       clearInterval(refreshInterval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Reload rooms when filter changes
   useEffect(() => {
     loadRooms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
-
-  const connectSocket = () => {
-    socketService.connect(token);
-
-    socketService.on('room-created', (room) => {
-      loadRooms(); // Reload instead of adding to prevent duplicates
-    });
-
-    socketService.on('online-users', (count) => {
-      setOnlineUsers(count);
-    });
-  };
-
-  const loadRooms = async () => {
-    setLoading(true);
-    try {
-      const response = await roomAPI.getRooms(filter);
-      setRooms(response.data.rooms);
-    } catch (error) {
-      toast.error('Không thể tải danh sách phòng');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleJoinRoom = async (roomId) => {
     try {
@@ -82,6 +84,7 @@ const Lobby = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleClaimDailyBonus = async () => {
     try {
       const response = await userAPI.claimDailyBonus();
@@ -92,6 +95,7 @@ const Lobby = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleAutoRefill = async () => {
     try {
       const response = await userAPI.autoRefill();

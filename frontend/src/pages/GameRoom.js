@@ -406,6 +406,7 @@ const GameRoom = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleRestartGame = () => {
     console.log('🔄 Restarting game...');
     setShowdownData(null);

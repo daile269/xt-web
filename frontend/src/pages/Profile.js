@@ -45,6 +45,7 @@ const Profile = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleClaimDailyBonus = async () => {
     try {
       const response = await userAPI.claimDailyBonus();
