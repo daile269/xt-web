@@ -5,3 +5,5 @@ node_modules/
 uploads/
 dist/
 build/
+.env.production
+.env.example
