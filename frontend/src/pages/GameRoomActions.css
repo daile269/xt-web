@@ -1,0 +1,214 @@
+/* ========================================
+   ACTION PANELS - DUAL LAYOUT
+   ======================================== */
+
+.action-panels {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.action-panel-left,
+.action-panel-right {
+  display: flex;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  pointer-events: all;
+}
+
+.action-panel-left {
+  border-bottom-left-radius: 0;
+}
+
+.action-panel-right {
+  border-bottom-right-radius: 0;
+}
+
+.action-button {
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 100px;
+}
+
+.action-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.action-button:active {
+  transform: translateY(-1px);
+}
+
+.action-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: grayscale(50%);
+}
+
+.action-button:disabled:hover {
+  transform: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Waiting Turn Message */
+.waiting-turn-message {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 193, 7, 0.5);
+  border-radius: 16px;
+  padding: 20px 40px;
+  margin-left: 20px;
+  animation: waitingPulse 2s ease-in-out infinite;
+}
+
+.waiting-icon {
+  font-size: 32px;
+  animation: iconSpin 2s linear infinite;
+}
+
+@keyframes iconSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.waiting-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffc107;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Left Panel Buttons */
+.btn-fold {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  color: white;
+}
+
+.btn-fold:hover {
+  background: linear-gradient(135deg, #7f8c8d 0%, #6c7a7b 100%);
+}
+
+.btn-check {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.btn-check:hover {
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+}
+
+.btn-call {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  color: white;
+}
+
+.btn-call:hover {
+  background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+}
+
+.btn-pass {
+  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+  color: white;
+}
+
+.btn-pass:hover {
+  background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+}
+
+/* Right Panel Buttons */
+.btn-bet {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: white;
+}
+
+.btn-bet:hover {
+  background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+}
+
+.btn-bet-half {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: white;
+}
+
+.btn-bet-half:hover {
+  background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+}
+
+.btn-bet-quarter {
+  background: linear-gradient(135deg, #16a085 0%, #138d75 100%);
+  color: white;
+}
+
+.btn-bet-quarter:hover {
+  background: linear-gradient(135deg, #138d75 0%, #117a65 100%);
+}
+
+.btn-raise {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+}
+
+.btn-raise:hover {
+  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .action-panels {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .action-panel-left,
+  .action-panel-right {
+    width: 100%;
+    max-width: 600px;
+    justify-content: center;
+    border-radius: 16px;
+  }
+
+  .action-button {
+    flex: 1;
+    min-width: auto;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-panel-left,
+  .action-panel-right {
+    flex-wrap: wrap;
+  }
+
+  .action-button {
+    flex: 1 1 calc(50% - 6px);
+  }
+}

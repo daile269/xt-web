@@ -1,0 +1,17 @@
+{
+  "short_name": "Poker & Xì Tố",
+  "name": "Poker & Xì Tố Online Game",
+  "description": "Chơi Poker và Xì Tố online với bạn bè",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#667eea",
+  "background_color": "#1a1a2e",
+  "orientation": "portrait-primary"
+}
