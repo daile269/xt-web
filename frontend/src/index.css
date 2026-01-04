@@ -5,9 +5,11 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* Use a cross-platform stack and fall back to system UI fonts on mobile */
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%; /* prevent iOS text autoscaling */
   background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
   color: #fff;
   min-height: 100vh;

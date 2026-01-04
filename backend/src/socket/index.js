@@ -167,11 +167,12 @@ module.exports = (io) => {
         // Populate room data
         await room.populate('players.userId', 'username displayName avatar coins');
 
-        // Notify all players in room
+        // Notify all players in room about the new player AND send updated player list
         io.to(`room:${roomId}`).emit('player-joined', {
           roomId,
           player: room.players[room.players.length - 1],
-          playerCount: room.players.length
+          playerCount: room.players.length,
+          allPlayers: room.players // Send full list so everyone stays in sync
         });
 
         // Auto-start removed - players must click "Chia Bài" button to start

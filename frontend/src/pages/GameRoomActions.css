@@ -9,44 +9,52 @@
   right: 0;
   display: flex;
   justify-content: space-between;
+  align-items: flex-end;
   padding: 20px;
   z-index: 100;
   pointer-events: none;
+  gap: 20px;
 }
 
 .action-panel-left,
 .action-panel-right {
   display: flex;
-  gap: 12px;
-  background: rgba(0, 0, 0, 0.9);
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(20, 15, 35, 0.95);
   backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(138, 43, 226, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
   pointer-events: all;
+  max-width: 320px;
 }
 
 .action-panel-left {
-  border-bottom-left-radius: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .action-panel-right {
-  border-bottom-right-radius: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .action-button {
-  padding: 14px 28px;
-  border-radius: 12px;
-  font-size: 15px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 700;
-  border: none;
+  border: 2px solid rgba(138, 43, 226, 0.4);
   cursor: pointer;
   transition: all 0.3s ease;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  min-width: 100px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  min-width: 90px;
+  flex: 1;
 }
 
 .action-button:hover {
@@ -103,82 +111,90 @@
   letter-spacing: 1px;
 }
 
-/* Left Panel Buttons */
+/* Left Panel Buttons - Purple/Dark theme */
 .btn-fold {
-  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  background: linear-gradient(135deg, #5a3d7a 0%, #4a2d6a 100%);
   color: white;
 }
 
 .btn-fold:hover {
-  background: linear-gradient(135deg, #7f8c8d 0%, #6c7a7b 100%);
+  background: linear-gradient(135deg, #6a4d8a 0%, #5a3d7a 100%);
+  border-color: rgba(138, 43, 226, 0.6);
 }
 
 .btn-check {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(135deg, #6a4d8a 0%, #5a3d7a 100%);
   color: white;
 }
 
 .btn-check:hover {
-  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  background: linear-gradient(135deg, #7a5d9a 0%, #6a4d8a 100%);
+  border-color: rgba(138, 43, 226, 0.6);
 }
 
 .btn-call {
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  background: linear-gradient(135deg, #7a5d9a 0%, #6a4d8a 100%);
   color: white;
 }
 
 .btn-call:hover {
-  background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+  background: linear-gradient(135deg, #8a6daa 0%, #7a5d9a 100%);
+  border-color: rgba(138, 43, 226, 0.6);
 }
 
 .btn-pass {
-  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, #4a2d6a 0%, #3a1d5a 100%);
   color: white;
 }
 
 .btn-pass:hover {
-  background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+  background: linear-gradient(135deg, #5a3d7a 0%, #4a2d6a 100%);
+  border-color: rgba(138, 43, 226, 0.6);
 }
 
-/* Right Panel Buttons */
+/* Right Panel Buttons - Purple/Pink theme */
 .btn-bet {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  background: linear-gradient(135deg, #8a6daa 0%, #7a5d9a 100%);
   color: white;
 }
 
 .btn-bet:hover {
-  background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+  background: linear-gradient(135deg, #9a7dba 0%, #8a6daa 100%);
+  border-color: rgba(138, 43, 226, 0.6);
 }
 
 .btn-bet-half {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  background: linear-gradient(135deg, #aa7dca 0%, #9a6dba 100%);
   color: white;
 }
 
 .btn-bet-half:hover {
-  background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+  background: linear-gradient(135deg, #ba8dda 0%, #aa7dca 100%);
+  border-color: rgba(186, 85, 211, 0.6);
 }
 
 .btn-bet-quarter {
-  background: linear-gradient(135deg, #16a085 0%, #138d75 100%);
+  background: linear-gradient(135deg, #ba8dda 0%, #aa7dca 100%);
   color: white;
 }
 
 .btn-bet-quarter:hover {
-  background: linear-gradient(135deg, #138d75 0%, #117a65 100%);
+  background: linear-gradient(135deg, #ca9dea 0%, #ba8dda 100%);
+  border-color: rgba(186, 85, 211, 0.6);
 }
 
 .btn-raise {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  background: linear-gradient(135deg, #ca9dea 0%, #ba8dda 100%);
   color: white;
 }
 
 .btn-raise:hover {
-  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+  background: linear-gradient(135deg, #daadfa 0%, #ca9dea 100%);
+  border-color: rgba(218, 112, 214, 0.6);
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
+/* @media (max-width: 1024px) {
   .action-panels {
     flex-direction: column;
     align-items: center;
@@ -200,15 +216,91 @@
     padding: 12px 16px;
     font-size: 13px;
   }
-}
+} */
 
 @media (max-width: 768px) {
+  .action-panels {
+    position: fixed;
+    bottom: 280px;
+    left: 0;
+    right: 0;
+    padding: 4px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 8px;
+    pointer-events: none;
+  }
+
   .action-panel-left,
   .action-panel-right {
-    flex-wrap: wrap;
+    flex: 0 0 auto;
+    width: 34%;
+    max-width: 34%;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: minmax(36px, auto);
+    gap: 6px;
+    padding: 4px;
+    pointer-events: all;
+    border-radius: 8px;
+    box-sizing: border-box;
   }
 
   .action-button {
-    flex: 1 1 calc(50% - 6px);
+    width: 100% !important;
+    min-width: auto !important;
+    font-size: 10px;
+    padding: 6px 6px;
+    border-radius: 6px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .waiting-turn-message {
+    padding: 6px 12px;
+    margin-left: 0;
+  }
+
+  .waiting-text {
+    font-size: 10px;
   }
 }
+
+/* Extra small devices (phones in portrait) */
+/* @media (max-width: 480px) {
+  .action-panels {
+    padding: 6px;
+    gap: 6px;
+    max-height: 40vh;
+  }
+
+  .action-panel-left,
+  .action-panel-right {
+    padding: 6px;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .action-button {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: auto;
+    border-radius: 8px;
+  }
+
+  .waiting-turn-message {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .waiting-icon {
+    font-size: 12px;
+  }
+
+  .waiting-text {
+    font-size: 12px;
+  }
+} */

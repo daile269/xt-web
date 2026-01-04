@@ -296,7 +296,23 @@ const GameRoom = () => {
   const handlePlayerJoined = async (data) => {
     console.log('👤 [FE] Player joined event:', data);
     
-    // Skip if it's the current user (already in player list from join callback)
+    // If backend sends full player list, use it for consistency
+    if (data.allPlayers && Array.isArray(data.allPlayers)) {
+      console.log('✅ [FE] Updating with full player list from server');
+      setGameState(prev => ({
+        ...prev,
+        players: data.allPlayers
+      }));
+      
+      // Show toast if it's not the current user
+      const joinedUserId = data.player?.userId?._id || data.player?.userId;
+      if (joinedUserId?.toString() !== user?.id?.toString()) {
+        toast.info(`${data.player?.userId?.displayName || 'Người chơi'} đã vào phòng`);
+      }
+      return;
+    }
+    
+    // Fallback: Add single player (old behavior)
     const joinedUserId = data.player?.userId?._id || data.player?.userId;
     if (joinedUserId?.toString() === user?.id?.toString()) {
       console.log('⏭️ [FE] Skipping player-joined for self');
@@ -305,9 +321,7 @@ const GameRoom = () => {
     
     toast.info(`${data.player?.userId?.displayName || 'Người chơi'} đã vào phòng`);
     
-    // Update state directly from event data instead of fetching API
     setGameState(prev => {
-      // Check if player already exists in list
       const existingPlayer = prev.players.find(p => {
         const pId = p.userId?._id || p.userId;
         const newId = data.player?.userId?._id || data.player?.userId;

@@ -5,7 +5,7 @@
   padding: 1rem 0;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .navbar-container {
@@ -157,6 +157,10 @@
   display: none;
 }
 
+.navbar-menu-close {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .navbar-container {
     padding: 0 1.5rem;
@@ -182,9 +186,11 @@
     display: flex;
   }
 
-  /* Overlay for mobile menu */
+  /* Overlay for mobile menu - only shown when menu is active */
   .navbar-menu-overlay {
-    display: block;
+    display: none !important;
+    visibility: hidden;
+    opacity: 0;
     position: fixed;
     top: 0;
     left: 0;
@@ -192,11 +198,28 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(2px);
-    z-index: 998;
+    z-index: -1;
+    cursor: pointer;
+    pointer-events: none;
+  }
+  
+  .navbar-menu-overlay.active {
+    display: block !important;
+    visibility: visible;
+    opacity: 1;
+    z-index: 2001;
+    pointer-events: auto;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   /* Hide desktop menu items */
   .navbar-menu {
+    display: none;
     position: fixed;
     top: 0;
     right: -100%;
@@ -209,11 +232,39 @@
     gap: 1.5rem;
     transition: right 0.3s ease;
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
-    z-index: 999;
+    z-index: 2002;
+    overflow-y: auto;
+  }
+  
+  .navbar-menu.active {
+    display: flex;
+    right: 0;
   }
 
-  .navbar-menu.active {
-    right: 0;
+  .navbar-menu-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 300;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+  }
+
+  .navbar-menu-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+    border-color: rgba(255, 255, 255, 0.4);
   }
 
   .navbar-item {

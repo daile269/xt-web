@@ -80,6 +80,9 @@ const Navbar = () => {
           )}
 
           <div className={`navbar-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+            <button className="navbar-menu-close" onClick={() => setIsMobileMenuOpen(false)}>
+              ✕
+            </button>
             <Link to="/lobby" className="navbar-item" onClick={handleLobbyClick}>Sảnh Game</Link>
             <Link to="/shop" className="navbar-item" onClick={handleMenuItemClick}>Cửa Hàng</Link>
             <Link to="/profile" className="navbar-item" onClick={handleMenuItemClick}>Hồ Sơ</Link>
