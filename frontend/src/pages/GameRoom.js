@@ -26,6 +26,8 @@ const GameRoom = () => {
     deck: [],
     phase: 'waiting', // waiting, playing, showdown
     timer: 30,
+    // per-seat timers: { [seatNumber]: seconds }
+    playerTimers: {},
     myPosition: 0,
     roomCreator: null, // ID của người tạo phòng
   });
@@ -43,17 +45,11 @@ const GameRoom = () => {
     const socket = socketService.connect(token);
     
     socket.on('game-started', (data) => {
-      console.log('🎮 [FE] game-started received!', data);
       toast.success('🎮 Game bắt đầu!');
       // Cards will come via game-state-update event
     });
     
     socket.on('game-state-update', (data) => {
-      console.log('🎮 [FE] game-state-update received!', {
-        hasMyCards: !!data.myCards,
-        myCardsLength: data.myCards?.length,
-        phase: data.phase
-      });
       handleGameStateUpdate(data);
     });
     
@@ -90,17 +86,13 @@ const GameRoom = () => {
     });
     
     socket.on('rejoined-room', (data) => {
-      console.log('✅ [FE] Rejoined room successfully:', data);
       // Chỉ hiện toast nếu đây là rejoin thực sự với game đang chơi
       if (data.success && data.hasActiveGame) {
         toast.success('🎮 Đã kết nối lại game đang chơi');
-      } else if (data.success) {
-        console.log('👋 [FE] Joined room (waiting for game to start)');
       }
     });
     
     socket.on('rejoin-failed', (data) => {
-      console.error('❌ [FE] Rejoin failed:', data);
       toast.error(data.message || 'Không thể kết nối lại phòng');
       // Redirect to lobby after 2 seconds
       setTimeout(() => {
@@ -117,7 +109,6 @@ const GameRoom = () => {
         // First, check if we have room data from navigation state
         const initialRoomData = location.state?.roomData;
         if (initialRoomData) {
-          console.log('✅ [FE] Using room data from navigation state:', initialRoomData);
           setGameState(prev => ({
             ...prev,
             players: initialRoomData.players || [],
@@ -130,7 +121,6 @@ const GameRoom = () => {
           window.history.replaceState({}, document.title);
         } else {
           // Fallback to API fetch
-          console.log('📡 [FE] Fetching room data from API');
           const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/room/${roomId}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('auth-storage') ? JSON.parse(localStorage.getItem('auth-storage')).state.token : ''}`
@@ -154,33 +144,20 @@ const GameRoom = () => {
         // Mark this room as visited
         sessionStorage.setItem(`visited-room-${roomId}`, 'true');
         
-        // Always emit rejoin-room to ensure socket joins the room
-        if (isInitialLoad) {
-          let retryCount = 0;
-          const maxRetries = 3;
-          
+        // Rejoin socket room ONLY on initial load AND if not first visit (means F5/refresh)
+        if (isInitialLoad && !isFirstVisit) {
           const checkSocketAndRejoin = () => {
             if (socket && socket.connected) {
-              if (!isFirstVisit) {
-                console.log('🔄 [FE] Rejoining room after F5/refresh');
-              } else {
-                console.log('👋 [FE] First time joining room - ensuring socket is in room (attempt', retryCount + 1, ')');
-              }
-              // IMPORTANT: Always emit to ensure socket.join('room:xxx') on backend
               socketService.emit('rejoin-room', { roomId });
               isInitialLoad = false;
             } else {
-              retryCount++;
-              if (retryCount < maxRetries) {
-                console.log('⏳ [FE] Socket not ready, retrying...', retryCount);
-                setTimeout(checkSocketAndRejoin, 500);
-              } else {
-                console.error('❌ [FE] Failed to join socket room after', maxRetries, 'attempts');
-              }
+              setTimeout(checkSocketAndRejoin, 200);
             }
           };
-          // Longer delay for production network latency
-          setTimeout(checkSocketAndRejoin, 500);
+          setTimeout(checkSocketAndRejoin, 300);
+        } else if (isInitialLoad) {
+          // First time visiting - no need to emit rejoin, server handles join via API
+          isInitialLoad = false;
         }
       } catch (error) {
         console.error('Failed to load room data:', error);
@@ -205,28 +182,41 @@ const GameRoom = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
-  // Timer countdown
+  // Per-player timers: decrement every second when active
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGameState(prev => {
+        const timers = { ...(prev.playerTimers || {}) };
+        let changed = false;
+        Object.keys(timers).forEach(k => {
+          if (timers[k] > 0) {
+            timers[k] = Math.max(0, timers[k] - 1);
+            changed = true;
+          }
+        });
+
+        if (changed) {
+          return { ...prev, playerTimers: timers };
+        }
+        return prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Global / fallback timer: decrement when playing and > 0
   useEffect(() => {
     if (gameState.phase === 'playing' && gameState.timer > 0) {
       const interval = setInterval(() => {
-        setGameState(prev => ({
-          ...prev,
-          timer: prev.timer - 1
-        }));
+        setGameState(prev => ({ ...prev, timer: Math.max(0, (prev.timer || 0) - 1) }));
       }, 1000);
-
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [gameState.phase, gameState.timer]);
 
   const handleGameStateUpdate = (data) => {
-    console.log('🎮 [FE] game-state-update received!', {
-      hasMyCards: !!data.myCards,
-      myCardsLength: data.myCards?.length,
-      phase: data.phase,
-      isRejoining: data.isRejoining
-    });
-    
     // Create a modified data object with myCards properly merged
     const updatedData = { ...data };
     
@@ -237,7 +227,6 @@ const GameRoom = () => {
     
     // Handle rejoining scenario - reset timer
     if (data.isRejoining && data.timer) {
-      console.log('🔄 [FE] Rejoining - resetting timer to', data.timer);
       updatedData.timer = data.timer;
     }
     
@@ -251,16 +240,7 @@ const GameRoom = () => {
         const isMatch = pIdStr === userIdStr;
         const isMe = p.isMe || isMatch;
         
-        console.log('🔍 [FE] Checking player:', {
-          username: p.userId?.username,
-          pIdStr,
-          userIdStr,
-          isMatch,
-          isMe
-        });
-        
         if (isMe) {
-          console.log('✅ [FE] Found my player, adding cards:', data.myCards);
           return {
             ...p,
             cards: data.myCards,
@@ -277,15 +257,30 @@ const GameRoom = () => {
       toast.info(`Đã tải lại game - Bạn có ${data.myCards.length} lá bài`);
     }
     
-    setGameState(prev => ({
-      ...prev,
-      ...updatedData
-    }));
+    setGameState(prev => {
+      const merged = { ...prev, ...updatedData };
+
+      // If server provides full timers map, use it
+      if (updatedData.timers && typeof updatedData.timers === 'object') {
+        merged.playerTimers = { ...updatedData.timers };
+      } else if (updatedData.timer !== undefined && updatedData.currentTurn !== undefined) {
+        // Server provided a single timer and a seat index for the current turn
+        merged.playerTimers = { ...(prev.playerTimers || {}) };
+        merged.playerTimers[updatedData.currentTurn] = updatedData.timer;
+      } else if (updatedData.timer !== undefined && updatedData.currentPlayer !== undefined) {
+        // Fallback: if server uses currentPlayer as seat number
+        const seat = updatedData.currentPlayer;
+        if (typeof seat === 'number') {
+          merged.playerTimers = { ...(prev.playerTimers || {}) };
+          merged.playerTimers[seat] = updatedData.timer;
+        }
+      }
+
+      return merged;
+    });
   };
 
   const handlePlayerAction = (data) => {
-    console.log('👤 Player action received:', data);
-    
     if (!data.action) {
       console.warn('⚠️ Received player action without action field:', data);
       return;
@@ -306,17 +301,13 @@ const GameRoom = () => {
   };
 
   const handleGameEnd = (data) => {
-    console.log('🏆 [OLD] Game end event:', data);
     // Redirect to new handler
     handleGameEnded(data);
   };
 
   const handlePlayerJoined = async (data) => {
-    console.log('👤 [FE] Player joined event:', data);
-    
     // If backend sends full player list, use it for consistency
     if (data.allPlayers && Array.isArray(data.allPlayers)) {
-      console.log('✅ [FE] Updating with full player list from server');
       setGameState(prev => ({
         ...prev,
         players: data.allPlayers,
@@ -335,7 +326,6 @@ const GameRoom = () => {
     // Fallback: Add single player (old behavior)
     const joinedUserId = data.player?.userId?._id || data.player?.userId;
     if (joinedUserId?.toString() === user?.id?.toString()) {
-      console.log('⏭️ [FE] Skipping player-joined for self');
       return;
     }
     
@@ -349,11 +339,9 @@ const GameRoom = () => {
       });
       
       if (existingPlayer) {
-        console.log('⚠️ [FE] Player already in list, skipping');
         return prev;
       }
       
-      console.log('✅ [FE] Adding new player to state:', data.player);
       return {
         ...prev,
         players: [...prev.players, data.player]
@@ -362,8 +350,6 @@ const GameRoom = () => {
   };
 
   const handlePlayerLeft = async (data) => {
-    console.log('👋 [FE] Player left event:', data);
-    
     // Don't show toast if it's the current user (they're probably just refreshing)
     if (data.userId !== user?.id) {
       toast.info(`${data.playerName || 'Người chơi'} đã rời phòng`);
@@ -377,8 +363,6 @@ const GameRoom = () => {
         return pId?.toString() !== leftId?.toString();
       });
       
-      console.log('✅ [FE] Player removed from state. Players count:', prev.players.length, '→', updatedPlayers.length);
-      
       return {
         ...prev,
         players: updatedPlayers
@@ -387,13 +371,11 @@ const GameRoom = () => {
   };
 
   const handleNewRound = (data) => {
-    console.log('🎲 New round started:', data);
     const roundNames = ['', 'Vòng 1 (3 lá)', 'Vòng 2 (4 lá)', 'Vòng 3 (5 lá)', 'Vòng 4 (6 lá)', 'Vòng 5 (7 lá)'];
     toast.info(`${roundNames[data.roundNumber]} - Chia bài!`);
   };
 
   const handleShowdown = (data) => {
-    console.log('🏆 Showdown results:', data);
     setShowdownData(data);
     
     // Also show toast for winner
@@ -404,16 +386,12 @@ const GameRoom = () => {
   };
 
   const handleGameEnded = (data) => {
-    console.log('🎮 [FE] handleGameEnded received:', data);
-    console.log('🎮 [FE] allPlayers:', data.allPlayers);
-    console.log('🎮 [FE] winner:', data.winner);
     setGameEndData(data);
     const winnerName = data?.winner?.username || data?.winner?.displayName || 'Người chơi';
     toast.success(`${winnerName} thắng!`);
   };
 
   const handleGameReset = (data) => {
-    console.log('🔄 Game reset:', data);
     setGameEndData(null);
     setShowdownData(null);
     setGameState(prev => ({
@@ -428,9 +406,7 @@ const GameRoom = () => {
   const handleStartNewGame = async () => {
     try {
       socketService.emit('new-game', { roomId }, (response) => {
-        if (response.success) {
-          console.log('✅ New game started');
-        } else {
+        if (!response.success) {
           toast.error(response.message);
         }
       });
@@ -442,7 +418,6 @@ const GameRoom = () => {
 
   // eslint-disable-next-line no-unused-vars
   const handleRestartGame = () => {
-    console.log('🔄 Restarting game...');
     setShowdownData(null);
     setGameEndData(null);
     
@@ -473,14 +448,11 @@ const GameRoom = () => {
   };
 
   const handleAction = (action, amount = 0) => {
-    console.log(`🎮 Performing action: ${action}`, { amount, roomId });
-    
     socketService.emit('player-action', {
       roomId,
       action,
       amount
     }, (response) => {
-      console.log('🎮 Server response:', response);
       if (!response || !response.success) {
         toast.error(response?.message || 'Action failed');
       }
@@ -585,7 +557,7 @@ const GameRoom = () => {
           ← Mức cược 1.000
         </button>
 
-        <div className="game-logo">
+        {/* <div className="game-logo">
           <div className="logo-badge">
             <div className="logo-suits">
               <span>♠</span>
@@ -595,7 +567,7 @@ const GameRoom = () => {
             </div>
             <div className="logo-text">XÌ TỐ</div>
           </div>
-        </div>
+        </div> */}
 
         {/* Game Status Indicator */}
         <div className={`game-status-indicator ${gameState.phase}`}>
@@ -678,7 +650,7 @@ const GameRoom = () => {
           </div>
 
           {/* Players */}
-          {/* Render all 5 positions with current user always at position 0 */}
+          {/* Render all positions (7 seats) with current user always at position 0 */}
           {(() => {
             // Find current user's seat
             const myPlayer = gameState.players.find(p => {
@@ -689,41 +661,41 @@ const GameRoom = () => {
             const mySeat = myPlayer ? myPlayer.seat : 0;
             
             // Calculate relative positions (current user always at position 0)
-            return [0, 1, 2, 3, 4].map(relativePosition => {
+            // Use 7 seats (0..6)
+            return [0, 1, 2, 3, 4, 5, 6].map(relativePosition => {
               // Calculate actual seat number
-              const actualSeat = (mySeat + relativePosition) % 5;
+              const actualSeat = (mySeat + relativePosition) % 7;
               const player = gameState.players.find(p => p.seat === actualSeat);
               
               if (player) {
                 // Render player with relative position for CSS
-                const isCurrentPlayer = player.userId?._id === gameState.currentPlayer;
+                // Determine whether this seat is the active turn. Server may use `currentTurn` (seat number)
+                // or `currentPlayer` (user id). Prefer `currentTurn` when available.
+                const isTurn = (typeof gameState.currentTurn === 'number') ? (gameState.currentTurn === player.seat) : (player.userId?._id === gameState.currentPlayer);
                 const userData = player.userId || {};
                 
                 // Properly compare user IDs (handle both object and string)
                 const playerUserId = userData._id?.toString ? userData._id.toString() : userData._id;
                 const currentUserId = user?.id?.toString ? user.id.toString() : user?.id;
                 const isMyPlayer = playerUserId === currentUserId;
-                
-                // Debug log to check player identification
-                console.log(`🎮 [RENDER] Player ${userData.username} at seat ${actualSeat}:`, {
-                  playerUserId,
-                  currentUserId,
-                  isMyPlayer,
-                  hasCards: !!player.cards,
-                  cardCount: player.cards?.length,
-                  visibleCardCount: player.visibleCards?.length
-                });
 
                 return (
                   <div key={player._id || player.userId?._id} className={`player-seat position-${relativePosition}`}>
-                    {isCurrentPlayer && (
-                      <div className={`turn-timer ${gameState.timer <= 10 ? 'warning' : ''}`}>
-                        {gameState.timer}
-                      </div>
-                    )}
-                    
                     <div className="player-container">
                       <div className={`player-info ${!player.isFolded ? 'active' : ''}`}>
+                        {( () => {
+                          const hasSeat = typeof player?.seat !== 'undefined';
+                          const timerValue = (gameState.playerTimers && hasSeat) ? (gameState.playerTimers[player.seat] || 0) : 0;
+                          // Show countdown only when it's this client's turn (isMyPlayer && isTurn)
+                          const displaySeconds = (timerValue > 0) ? timerValue : (isTurn ? (gameState.timer || 0) : 0);
+                          const shouldShow = isMyPlayer && isTurn;
+                          return shouldShow ? (
+                            <div className={`turn-timer ${displaySeconds <= 10 ? 'warning' : ''}`}>
+                              {displaySeconds}
+                            </div>
+                          ) : null;
+                        })()}
+
                         <img 
                           src={getAvatarUrl(userData.avatar)} 
                           alt={userData.displayName || userData.username} 
@@ -805,23 +777,10 @@ const GameRoom = () => {
 
             // Check if it's my turn
             const isMyTurn = myPlayer && gameState.currentTurn === myPlayer.seat;
-            
-            // Debug log (commented out to reduce spam - this runs on every render!)
-            // console.log('🎯 Turn check:', {
-            //   myPlayer: myPlayer ? `${myPlayer.userId?.username || myPlayer.userId?.displayName} (seat ${myPlayer.seat})` : 'not found',
-            //   currentTurn: gameState.currentTurn,
-            //   isMyTurn,
-            //   phase: gameState.phase
-            // });
 
             if (!isMyTurn) {
-              // Show waiting message
-              return (
-                <div className="waiting-turn-message">
-                  <span className="waiting-icon">⏳</span>
-                  <span className="waiting-text">Đang chờ người chơi khác...</span>
-                </div>
-              );
+              // Don't show anything when it's not my turn
+              return null;
             }
 
             // Show action buttons if it's my turn

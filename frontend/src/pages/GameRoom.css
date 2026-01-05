@@ -398,31 +398,54 @@
   z-index: 4;
 }
 
-/* Position calculations for 5 players */
+/* Position calculations for 7 players
+   Layout: left and right vertical columns with 3 players each, current user at bottom-center
+   - position-0: current user (bottom center)
+   - positions 1..3: left column (top -> middle -> bottom)
+   - positions 4..6: right column (top -> middle -> bottom)
+*/
 .player-seat.position-0 { /* Bottom center - Current player */
   bottom: -50px;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.player-seat.position-1 { /* Bottom Left corner */
-  left: 20px;
-  bottom: 10px;
+/* Left column (3 players) */
+.player-seat.position-1 {
+  top: 12%;
+  left: 10%;
+  transform: translateX(-50%);
 }
 
-.player-seat.position-2 { /* Top left corner */
-  left: 20px;
-  top: 20px;
+.player-seat.position-2 {
+  top: 42%;
+  left: 10%;
+  transform: translateX(-50%);
 }
 
-.player-seat.position-3 { /* Top right corner */
-  right: 20px;
-  top: 20px;
+.player-seat.position-3 {
+  top: 72%;
+  left: 10%;
+  transform: translateX(-50%);
 }
 
-.player-seat.position-4 { /* Bottom Right corner */
-  right: 20px;
-  bottom: 10px;
+/* Right column (3 players) */
+.player-seat.position-4 {
+  top: 12%;
+  right: 10%;
+  transform: translateX(50%);
+}
+
+.player-seat.position-5 {
+  top: 42%;
+  right: 10%;
+  transform: translateX(50%);
+}
+
+.player-seat.position-6 {
+  top: 72%;
+  right: 10%;
+  transform: translateX(50%);
 }
 
 .player-container {
@@ -432,36 +455,51 @@
   gap: 8px;
 }
 
-/* Player left - cards on right */
+/* Position-specific container directions for 7-seat layout */
+/* Top-left */
 .position-1 .player-container {
   flex-direction: row;
   align-items: center;
   gap: 12px;
 }
 
-/* Player top-left - cards on right */
+/* Top-center (cards below) */
 .position-2 .player-container {
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* Player top-right - cards on left */
+/* Top-right */
 .position-3 .player-container {
   flex-direction: row-reverse;
   align-items: center;
   gap: 12px;
 }
 
-/* Player right - cards on left */
+/* Middle-left */
 .position-4 .player-container {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Middle-center (cards below) */
+.position-5 .player-container {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Middle-right */
+.position-6 .player-container {
   flex-direction: row-reverse;
   align-items: center;
   gap: 12px;
 }
 
 .player-info {
-  background: rgba(0, 0, 0, 0.7);
+  /* background: rgba(0, 0, 0, 0.7); */
   backdrop-filter: blur(10px);
   border: 2px solid rgba(138, 43, 226, 0.3);
   border-radius: 12px;
@@ -501,6 +539,93 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+/* Desktop: place name above avatar and chips below avatar */
+@media (min-width: 769px) {
+  .player-info {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* increase vertical padding so name and chips fit inside the card */
+      padding: 12px 12px;
+      min-width: 140px;
+      overflow: visible;
+    }
+
+  /* Flatten the details wrapper so name/chips can be positioned relative to .player-info */
+  .player-info .player-details {
+    display: contents;
+  }
+
+  .player-info .player-name {
+    position: absolute;
+    top: 0px; /* keep inside the card */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    white-space: nowrap;
+    color: #ffffff;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+    z-index: 6;
+  }
+
+  .player-info .player-chips {
+    position: absolute;
+    bottom: 0px; /* keep inside the card */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: #ffd700;
+    z-index: 6;
+  }
+
+  /* Ensure avatar remains centered */
+  .player-info .player-avatar {
+    margin: 6px 0;
+    position: relative;
+    z-index: 9;
+  }
+
+  /* Timer positioned same as the player-status (top-right corner) */
+  .player-info .turn-timer {
+    position: absolute;
+    top: 18px;
+    /* right: -20px; */
+    transform: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    border: 3px solid rgba(0, 255, 136, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: white;
+    z-index: 12;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0,255,136,0.12);
+    transition: all 0.12s ease;
+  }
+
+  .player-info .turn-timer::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 2px dashed rgba(0,255,136,0.16);
+  }
+
+  .player-info .turn-timer.warning {
+    border-color: rgba(255, 107, 107, 0.18);
+    box-shadow: 0 0 28px rgba(255, 107, 107, 0.32);
+  }
+
+  /* ensure global rule doesn't override the positioned ring */
+  /* (no-op global override removed) */
+}
+
 .player-details {
   flex: 1;
 }
@@ -527,7 +652,7 @@
 .player-status {
   position: absolute;
   top: -10px;
-  right: -10px;
+  right: -20px;
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid;
   border-radius: 8px;
@@ -1039,44 +1164,54 @@
   }
 
   .waiting-message {
-    padding: 12px 24px;
+    padding: 6px 12px;
     font-size: 14px;
+    width: 60%;
   }
 
-  /* Player positions - adjusted for mobile */
+  /* Player positions - mobile: left and right vertical columns (3 each) */
   .player-seat {
-    width: 100px;
+    width: 120px;
   }
 
   .player-seat.position-0 {
-    bottom: -40px;
+    bottom: -36px;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
-  .player-seat.position-1 {
-    left: 10px;
-    bottom: 100px;
-    top: auto;
-  }
+  /* Left column (top -> middle -> bottom) */
+  .player-seat.position-1 { top: 4%; left: -8%; transform: translateX(0); }
+  .player-seat.position-2 { top: 34%; left: -8%; transform: translateX(0); }
+  .player-seat.position-3 { top: 64%; left: -8%; transform: translateX(0); }
 
-  .player-seat.position-2 {
-    left: 10px;
-    top: 10px;
-  }
+  /* Right column (top -> middle -> bottom) */
+  .player-seat.position-4 { top: 4%; right: -4%; transform: translateX(0); }
+  .player-seat.position-5 { top: 34%; right: -4%; transform: translateX(0); }
+  .player-seat.position-6 { top: 64%; right: -4%; transform: translateX(0); }
 
-  .player-seat.position-3 {
-    right: 10px;
-    top: 10px;
-  }
-
-  .player-seat.position-4 {
-    right: 10px;
-    bottom: 100px;
-    top: auto;
-  }
-
-  /* Player container - cards below info on mobile */
+  /* Player container on mobile:
+     - default center alignment
+     - seats 1,2,3: show cards on RIGHT (row)
+     - seats 4,5,6: show cards on LEFT  (row-reverse)
+  */
   .player-container {
-    flex-direction: column !important;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .position-1 .player-container,
+  .position-2 .player-container,
+  .position-3 .player-container {
+    flex-direction: row; /* cards on right */
+    align-items: center;
+    gap: 8px;
+  }
+
+  .position-4 .player-container,
+  .position-5 .player-container,
+  .position-6 .player-container {
+    flex-direction: row-reverse; /* cards on left */
     align-items: center;
     gap: 8px;
   }
@@ -1100,6 +1235,40 @@
     font-size: 13px;
   }
 
+  /* Place name above avatar and chips below inside the player card on mobile */
+  .player-info {
+    position: relative;
+    padding: 18px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .player-info .player-details {
+    display: contents;
+  }
+
+  .player-info .player-name {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #fff;
+    white-space: nowrap;
+    z-index: 6;
+  }
+
+  .player-info .player-chips {
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    color: #ffd700;
+    z-index: 6;
+  }
+
   .player-status {
     padding: 2px 8px;
     font-size: 9px;
@@ -1114,6 +1283,35 @@
   .playing-card {
     width: 40px;
     height: 56px;
+  }
+
+  /* Mobile: Always show cards spread out like hover state */
+  .player-cards .playing-card:nth-child(1) {
+    transform: translateX(-30px);
+  }
+
+  .player-cards .playing-card:nth-child(2) {
+    transform: translateX(-20px);
+  }
+
+  .player-cards .playing-card:nth-child(3) {
+    transform: translateX(-10px);
+  }
+
+  .player-cards .playing-card:nth-child(4) {
+    transform: translateX(0px);
+  }
+
+  .player-cards .playing-card:nth-child(5) {
+    transform: translateX(10px);
+  }
+
+  .player-cards .playing-card:nth-child(6) {
+    transform: translateX(20px);
+  }
+
+  .player-cards .playing-card:nth-child(7) {
+    transform: translateX(30px);
   }
 
   .card-rank {
@@ -1328,6 +1526,8 @@
 
   .pot-display {
     padding: 6px 12px;
+    width: 40%;
+    max-width: 140px;
   }
 
   .pot-value {
@@ -1345,8 +1545,8 @@
   }
 
   .player-info {
-    min-width: 85px;
-    padding: 5px;
+    min-width: 90px;
+    padding: 12px 2px;
     gap: 4px;
   }
 
@@ -1367,7 +1567,7 @@
     padding: 2px 6px;
     font-size: 8px;
     top: -8px;
-    right: -8px;
+    right: -28px;
   }
 
   /* Tiny cards */
@@ -1423,11 +1623,11 @@
 
   /* Timer */
   .turn-timer {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     font-size: 16px;
     border-width: 3px;
-    top: -30px;
+    top: 11px;
   }
 
   /* Hide game logo on very small screens to save space */

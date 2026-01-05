@@ -239,7 +239,6 @@ const Lobby = () => {
             // Ensure socket joins the room (creator may already be in DB)
             try {
               socketService.joinRoom({ roomId: room._id }, (response) => {
-                console.log('✅ [LOBBY] joinRoom response for creator:', response);
                 // Small delay to ensure backend socket.join() completes
                 setTimeout(() => {
                   navigate(`/room/${room._id}`, { 
@@ -249,7 +248,6 @@ const Lobby = () => {
               });
             } catch (err) {
               // Fallback navigate immediately if socket emit fails
-              console.error('❌ [LOBBY] joinRoom emit failed:', err);
               navigate(`/room/${room._id}`, { state: { roomData: room } });
             }
           }}

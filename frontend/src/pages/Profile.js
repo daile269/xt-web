@@ -29,7 +29,7 @@ const Profile = () => {
       const response = await userAPI.getStats();
       setStats(response.data.stats);
     } catch (error) {
-      console.error('Load stats error:', error);
+      // Load stats error
     }
   };
 

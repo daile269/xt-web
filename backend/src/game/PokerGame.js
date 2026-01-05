@@ -444,7 +444,8 @@ class PokerGame {
       roundName: this.roundName,
       dealerSeat: this.room.dealerSeat,
       smallBlind: this.smallBlind,
-      bigBlind: this.bigBlind
+      bigBlind: this.bigBlind,
+      timer: 30
     };
   }
 
@@ -486,7 +487,8 @@ class PokerGame {
       ...publicState,
       players: playersWithMyCards,
       myCards: player.cards || [],
-      myUserId: targetUserId
+      myUserId: targetUserId,
+      timer: 30
     };
   }
 

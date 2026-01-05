@@ -778,7 +778,8 @@ class XiToGame {
       currentTurn: this.currentTurn,
       roundNumber: this.roundNumber,
       dealerSeat: this.room.dealerSeat,
-      bettingLimits: this.getBettingLimits()
+      bettingLimits: this.getBettingLimits(),
+      timer: 30
     };
   }
 
@@ -818,7 +819,8 @@ class XiToGame {
     ...publicState,
     players: playersWithMyCards,
     myCards: player.cards || [],
-    myUserId: targetUserId
+    myUserId: targetUserId,
+    timer: 30
   };
 }
   async playerFold(userId) {

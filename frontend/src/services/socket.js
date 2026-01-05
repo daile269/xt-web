@@ -32,7 +32,7 @@ class SocketService {
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      // Socket connection error
     });
 
     return this.socket;
@@ -78,7 +78,7 @@ class SocketService {
 
   // Event listeners
   on(event, callback) {
-    console.log(`📡 Registering listener for event: ${event}`);
+    // console.log(`📡 Registering listener for event: ${event}`);
     this.socket?.on(event, callback);
   }
 
