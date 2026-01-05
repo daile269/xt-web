@@ -6,6 +6,13 @@ import { useAuthStore } from '../store/authStore';
 import './GameRoom.css';
 import './GameRoomActions.css';
 
+// Helper to resolve avatar URL
+const getAvatarUrl = (avatar) => {
+  if (!avatar) return `${process.env.PUBLIC_URL}/avatars/default.png`;
+  if (avatar.startsWith('http')) return avatar;
+  return `${process.env.PUBLIC_URL}${avatar}`;
+};
+
 const GameRoom = () => {
   const navigate = useNavigate();
   const { roomId } = useParams();
@@ -301,7 +308,9 @@ const GameRoom = () => {
       console.log('✅ [FE] Updating with full player list from server');
       setGameState(prev => ({
         ...prev,
-        players: data.allPlayers
+        players: data.allPlayers,
+        roomCreator: data.roomCreator || prev.roomCreator,
+        phase: data.phase || prev.phase
       }));
       
       // Show toast if it's not the current user
@@ -615,31 +624,46 @@ const GameRoom = () => {
               <div className="dealer-button">D</div>
             </div>
 
-            {gameState.phase === 'waiting' && gameState.players.length >= 2 && gameState.roomCreator === user?.id ? (
-              <button 
-                className="start-game-button"
-                onClick={() => {
-                  if (!gameStarting) {
-                    setGameStarting(true);
-                    socketService.emit('start-game', { roomId });
-                    setTimeout(() => setGameStarting(false), 3000); // Re-enable after 3s
-                  }
-                }}
-                disabled={gameStarting}
-              >
-                {gameStarting ? '⏳ Đang chia bài...' : '🎴 Chia Bài'}
-              </button>
-            ) : gameState.phase === 'waiting' && gameState.players.length >= 2 ? (
-              <div className="waiting-message">
-                Đang chờ chủ phòng chia bài...
-              </div>
-            ) : (
-              <div className="pot-display">
-                <div className="pot-total">Tổng:</div>
-                <div className="pot-value">{formatChips(gameState.pot.total)}</div>
-                <div className="pot-follow">Theo: {gameState.pot.follow}</div>
-              </div>
-            )}
+            {(() => {
+              // Normalize IDs for comparison
+              const roomCreatorId = typeof gameState.roomCreator === 'object' 
+                ? gameState.roomCreator?._id?.toString() 
+                : gameState.roomCreator?.toString();
+              const currentUserId = user?.id?.toString();
+              const isCreator = roomCreatorId === currentUserId;
+              
+              if (gameState.phase === 'waiting' && gameState.players.length >= 2 && isCreator) {
+                return (
+                  <button 
+                    className="start-game-button"
+                    onClick={() => {
+                      if (!gameStarting) {
+                        setGameStarting(true);
+                        socketService.emit('start-game', { roomId });
+                        setTimeout(() => setGameStarting(false), 3000);
+                      }
+                    }}
+                    disabled={gameStarting}
+                  >
+                    {gameStarting ? '⏳ Đang chia bài...' : '🎴 Chia Bài'}
+                  </button>
+                );
+              } else if (gameState.phase === 'waiting' && gameState.players.length >= 2) {
+                return (
+                  <div className="waiting-message">
+                    Đang chờ chủ phòng chia bài...
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="pot-display">
+                    <div className="pot-total">Tổng:</div>
+                    <div className="pot-value">{formatChips(gameState.pot.total)}</div>
+                    <div className="pot-follow">Theo: {gameState.pot.follow}</div>
+                  </div>
+                );
+              }
+            })()}
           </div>
 
           {/* Players */}
@@ -690,7 +714,7 @@ const GameRoom = () => {
                     <div className="player-container">
                       <div className={`player-info ${!player.isFolded ? 'active' : ''}`}>
                         <img 
-                          src={userData.avatar || '/avatars/default.png'} 
+                          src={getAvatarUrl(userData.avatar)} 
                           alt={userData.displayName || userData.username} 
                           className="player-avatar"
                         />
@@ -892,7 +916,7 @@ const GameRoom = () => {
                       <div className="player-result-header">
                         <div className={`player-result-avatar ${isWinner ? 'winner-avatar' : ''}`}>
                           <img 
-                            src={player.avatar || '/avatars/default.png'} 
+                            src={getAvatarUrl(player.avatar)} 
                             alt={player.username}
                           />
                         </div>
@@ -932,7 +956,7 @@ const GameRoom = () => {
                   <div className="player-result-header">
                     <div className="player-result-avatar winner-avatar">
                       <img 
-                        src={gameEndData.winner?.avatar || '/avatars/default.png'} 
+                        src={getAvatarUrl(gameEndData.winner?.avatar)} 
                         alt={gameEndData.winner?.username}
                       />
                     </div>
@@ -1020,7 +1044,7 @@ const GameRoom = () => {
 
                     <div className="player-result-header">
                       <div className={`player-result-avatar ${isWinner ? 'winner-avatar' : ''}`}>
-                        <img src={userData.avatar || '/avatars/default.png'} alt={userData.username} />
+                        <img src={getAvatarUrl(userData.avatar)} alt={userData.username} />
                       </div>
                       <div className="player-result-info">
                         <h3 className="player-result-name">{userData.displayName || userData.username}</h3>

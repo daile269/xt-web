@@ -105,7 +105,7 @@ const Navbar = () => {
               💲 {user?.coins?.toLocaleString() || 0}
             </div>
             <div className="user-avatar">
-              <img src={user?.avatar || '/default-avatar.png'} alt={user?.username} />
+              <img src={user?.avatar?.startsWith('http') ? user.avatar : `${process.env.PUBLIC_URL}${user?.avatar || '/avatars/default.png'}`} alt={user?.username} />
             </div>
             <span className="user-name">{user?.displayName || user?.username}</span>
             <button onClick={handleClaimDailyBonus} className="btn btn-gift btn-sm navbar-gift-btn">

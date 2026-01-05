@@ -60,7 +60,7 @@ const Profile = () => {
     <div className="profile-container">
       <div className="profile-header">
         <div className="profile-avatar">
-          <img src={user?.avatar || '/default-avatar.png'} alt={user?.username} />
+          <img src={user?.avatar?.startsWith('http') ? user.avatar : `${process.env.PUBLIC_URL}${user?.avatar || '/avatars/default.png'}`} alt={user?.username} />
         </div>
         <div className="profile-info">
           <h1>{user?.displayName || user?.username}</h1>

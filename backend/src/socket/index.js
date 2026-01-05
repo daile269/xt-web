@@ -172,7 +172,9 @@ module.exports = (io) => {
           roomId,
           player: room.players[room.players.length - 1],
           playerCount: room.players.length,
-          allPlayers: room.players // Send full list so everyone stays in sync
+          allPlayers: room.players, // Send full list so everyone stays in sync
+          roomCreator: room.createdBy.toString(),
+          phase: room.status
         });
 
         // Auto-start removed - players must click "Chia Bài" button to start
