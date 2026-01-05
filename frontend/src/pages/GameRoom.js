@@ -154,22 +154,33 @@ const GameRoom = () => {
         // Mark this room as visited
         sessionStorage.setItem(`visited-room-${roomId}`, 'true');
         
-        // Rejoin socket room ONLY on initial load AND if not first visit (means F5/refresh)
-        if (isInitialLoad && !isFirstVisit) {
+        // Always emit rejoin-room to ensure socket joins the room
+        if (isInitialLoad) {
+          let retryCount = 0;
+          const maxRetries = 3;
+          
           const checkSocketAndRejoin = () => {
             if (socket && socket.connected) {
-              console.log('🔄 [FE] Rejoining room after F5/refresh');
+              if (!isFirstVisit) {
+                console.log('🔄 [FE] Rejoining room after F5/refresh');
+              } else {
+                console.log('👋 [FE] First time joining room - ensuring socket is in room (attempt', retryCount + 1, ')');
+              }
+              // IMPORTANT: Always emit to ensure socket.join('room:xxx') on backend
               socketService.emit('rejoin-room', { roomId });
               isInitialLoad = false;
             } else {
-              setTimeout(checkSocketAndRejoin, 200);
+              retryCount++;
+              if (retryCount < maxRetries) {
+                console.log('⏳ [FE] Socket not ready, retrying...', retryCount);
+                setTimeout(checkSocketAndRejoin, 500);
+              } else {
+                console.error('❌ [FE] Failed to join socket room after', maxRetries, 'attempts');
+              }
             }
           };
-          setTimeout(checkSocketAndRejoin, 300);
-        } else if (isInitialLoad) {
-          // First time visiting - no need to emit rejoin, server handles join via API
-          console.log('👋 [FE] First time joining room - skipping rejoin-room event');
-          isInitialLoad = false;
+          // Longer delay for production network latency
+          setTimeout(checkSocketAndRejoin, 500);
         }
       } catch (error) {
         console.error('Failed to load room data:', error);

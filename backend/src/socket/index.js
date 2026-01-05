@@ -132,8 +132,29 @@ module.exports = (io) => {
         }
 
         // Check if already in room
-        if (room.players.some(p => p.userId.toString() === socket.userId)) {
-          return callback({ success: false, message: 'Already in room' });
+        const alreadyInRoom = room.players.some(p => p.userId.toString() === socket.userId);
+        if (alreadyInRoom) {
+          // User already present in DB (e.g., room creator created via API)
+          // Join socket room so they receive realtime events, and return success
+          console.log(`🔁 [JOIN] User ${socket.user.username} already in room ${roomId} - joining socket room only`);
+          socket.join(`room:${roomId}`);
+
+          // Populate room data and notify caller with current seat
+          await room.populate('players.userId', 'username displayName avatar coins');
+          const seat = room.players.find(p => p.userId.toString() === socket.userId)?.seat;
+
+          // Broadcast full player list to ensure everyone is synced (idempotent)
+          io.to(`room:${roomId}`).emit('player-joined', {
+            roomId,
+            player: room.players.find(p => p.userId.toString() === socket.userId),
+            playerCount: room.players.length,
+            allPlayers: room.players,
+            roomCreator: room.createdBy.toString(),
+            phase: room.status,
+            isRejoin: true
+          });
+
+          return callback({ success: true, room, seat, message: 'Rejoined socket room' });
         }
 
         // Get available seat
@@ -270,8 +291,19 @@ module.exports = (io) => {
             message: 'Đã kết nối lại phòng',
             hasActiveGame: !!activeGames.get(roomId)
           });
-          
-          console.log('✅ [REJOIN] Complete - User successfully rejoined');
+
+          // Broadcast current room player list to all clients to guarantee sync
+          io.to(`room:${roomId}`).emit('player-joined', {
+            roomId,
+            player: room.players.find(p => p.userId.toString() === socket.userId),
+            playerCount: room.players.length,
+            allPlayers: room.players,
+            roomCreator: room.createdBy.toString(),
+            phase: room.status,
+            isRejoin: true
+          });
+
+          console.log('✅ [REJOIN] Complete - User successfully rejoined and broadcasted');
         } else {
           console.log(`❌ [REJOIN] User ${socket.user.username} not in room ${roomId} player list`);
           socket.emit('rejoin-failed', { 
