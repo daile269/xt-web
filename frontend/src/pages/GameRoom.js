@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import socketService from '../services/socket';
@@ -438,17 +438,17 @@ const GameRoom = () => {
   };
   
   // Handler for selecting a card to flip
-  const handleSelectCard = (cardIndex) => {
+  const handleSelectCard = useCallback((cardIndex) => {
     console.log('🎴 handleSelectCard called:', { cardIndex, isSelectingCard });
     if (!isSelectingCard) {
       console.log('⚠️ Not in selecting card phase, ignoring');
       return;
     }
+
     
-    console.log('✅ Selecting card:', cardIndex);
     setSelectedCardIndex(cardIndex);
     setIsSelectingCard(false);
-    
+
     // Emit to server
     socketService.emit('select-card-to-flip', { roomId, cardIndex }, (response) => {
       console.log('📡 Server response:', response);
@@ -460,7 +460,7 @@ const GameRoom = () => {
         toast.success('Đã chọn bài!');
       }
     });
-  };
+  }, [isSelectingCard, roomId]);
 
   // Auto-flip timer: if player doesn't select within 30s, auto-select the outermost card
   useEffect(() => {
@@ -487,7 +487,7 @@ const GameRoom = () => {
     }, 30000);
 
     return () => clearTimeout(timer);
-  }, [isSelectingCard, gameState.players, selectedCardIndex, user]);
+  }, [isSelectingCard, gameState.players, selectedCardIndex, user, handleSelectCard]);
 
   // eslint-disable-next-line no-unused-vars
   const handleRestartGame = () => {
