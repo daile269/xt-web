@@ -59,19 +59,21 @@ class XiToGame {
     // Deal first round (3 cards) - all face down (úp tẩy)
     this.dealCards(3, 0); // 3 cards, 0 visible
     
-    // Start betting from player after dealer
-    this.currentTurn = this.getNextPlayerSeat(this.room.dealerSeat);
-    this.lastRaiser = null; // No one has raised yet
-    this.actionCount = 0; // Reset action count
-    
-    console.log('🎮 Game started:', {
-      dealerSeat: this.room.dealerSeat,
-      currentTurn: this.currentTurn,
-      players: this.room.players.map(p => ({ seat: p.seat, username: p.userId?.username }))
-    });
-    this.startTurnTimer();
+    // Initialize card selection tracking
+    this.room.cardSelectionPhase = true;
+    this.room.playersWhoSelected = [];
     
     await this.room.save();
+    
+    // Notify all players to select a card to flip
+    this.io.to(`room:${this.room._id}`).emit('card-selection-phase', {
+      message: 'Chọn 1 lá bài để lật ra'
+    });
+    
+    console.log('🎮 Game started - Card selection phase:', {
+      dealerSeat: this.room.dealerSeat,
+      players: this.room.players.map(p => ({ seat: p.seat, username: p.userId?.username }))
+    });
     
     this.broadcastGameState();
   }
@@ -823,6 +825,89 @@ class XiToGame {
     timer: 30
   };
 }
+
+  /**
+   * Handle player selecting a card to flip in round 1
+   */
+  async handleCardSelection(userId, cardIndex) {
+    // Normalize userId to string
+    const userIdStr = userId?._id ? userId._id.toString() : 
+                     (userId?.toString ? userId.toString() : String(userId));
+    
+    // Check if in card selection phase
+    if (!this.room.cardSelectionPhase) {
+      return { success: false, message: 'Không trong pha chọn bài' };
+    }
+    
+    // Find player
+    const player = this.room.players.find(p => {
+      const pUserId = p.userId?._id ? p.userId._id.toString() : p.userId.toString();
+      return pUserId === userIdStr;
+    });
+    
+    if (!player) {
+      return { success: false, message: 'Không tìm thấy người chơi' };
+    }
+    
+    // Check if player already selected
+    if (this.room.playersWhoSelected.includes(userIdStr)) {
+      return { success: false, message: 'Bạn đã chọn bài rồi' };
+    }
+    
+    // Validate card index
+    if (cardIndex < 0 || cardIndex >= player.cards.length) {
+      return { success: false, message: 'Lá bài không hợp lệ' };
+    }
+    
+    // Move the selected card to visibleCards
+    const selectedCard = player.cards[cardIndex];
+    player.visibleCards = [selectedCard];
+    
+    // Mark player as selected
+    this.room.playersWhoSelected.push(userIdStr);
+    
+    await this.room.save();
+    
+    console.log(`🎴 Player ${player.userId?.username} selected card ${cardIndex}:`, selectedCard);
+    
+    // Broadcast updated state
+    this.broadcastGameState();
+    
+    // Check if all players have selected
+    const activePlayers = this.getActivePlayers();
+    if (this.room.playersWhoSelected.length >= activePlayers.length) {
+      // All players selected, start betting
+      await this.startBettingRound();
+    }
+    
+    return { success: true };
+  }
+  
+  /**
+   * Start the betting round after all players selected their cards
+   */
+  async startBettingRound() {
+    this.room.cardSelectionPhase = false;
+    
+    // Start betting from player after dealer
+    this.currentTurn = this.getNextPlayerSeat(this.room.dealerSeat);
+    this.lastRaiser = null;
+    this.actionCount = 0;
+    
+    console.log('💰 Starting betting round:', {
+      currentTurn: this.currentTurn,
+      players: this.room.players.map(p => ({ 
+        seat: p.seat, 
+        username: p.userId?.username,
+        visibleCards: p.visibleCards 
+      }))
+    });
+    
+    this.startTurnTimer();
+    await this.room.save();
+    this.broadcastGameState();
+  }
+
   async playerFold(userId) {
     return await this.handlePlayerAction(userId, 'fold');
   }

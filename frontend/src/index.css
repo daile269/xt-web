@@ -5,8 +5,8 @@
 }
 
 body {
-  /* Use a cross-platform stack and fall back to system UI fonts on mobile */
-  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Use system fonts that properly support Vietnamese */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%; /* prevent iOS text autoscaling */
@@ -21,11 +21,10 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
-/* Preserve emoji colors */
+/* Preserve emoji colors - ONLY for emoji elements */
 span[role="img"],
-.emoji,
-*:not(input):not(textarea) {
-  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+.emoji {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 }
 
 /* Custom scrollbar */
@@ -54,7 +53,7 @@ button {
   font-family: inherit;
   transition: all 0.3s ease;
   /* Better touch targets for mobile */
-  min-height: 44px;
+  min-height: 36px;
   -webkit-tap-highlight-color: transparent;
 }
 

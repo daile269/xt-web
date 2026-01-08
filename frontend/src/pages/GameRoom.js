@@ -38,6 +38,8 @@ const GameRoom = () => {
   const [showdownData, setShowdownData] = useState(null); // For showdown results
   const [gameStarting, setGameStarting] = useState(false); // Prevent double-click
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false); // Leave room confirmation
+  const [selectedCardIndex, setSelectedCardIndex] = useState(null); // Index of card selected to flip
+  const [isSelectingCard, setIsSelectingCard] = useState(false); // Whether player is in card selection phase
 
   // Socket connection and room data loading - unified to prevent timing issues
   useEffect(() => {
@@ -83,6 +85,20 @@ const GameRoom = () => {
     
     socket.on('showdown', (data) => {
       handleShowdown(data);
+    });
+    
+    socket.on('card-selection-phase', (data) => {
+      // Người chơi bắt đầu pha chọn bài để lật
+      console.log('🎴 Card selection phase started:', data);
+      setIsSelectingCard(true);
+      setSelectedCardIndex(null);
+      toast.info('🎴 Xem bài của bạn và chọn 1 lá để lật ra');
+    });
+    
+    socket.on('card-flipped', (data) => {
+      // Cập nhật khi có người chọn bài
+      console.log('🎴 Card flipped:', data);
+      handleGameStateUpdate(data);
     });
     
     socket.on('rejoined-room', (data) => {
@@ -178,6 +194,8 @@ const GameRoom = () => {
       socket.off('player-left');
       socket.off('new-round');
       socket.off('showdown');
+      socket.off('card-selection-phase');
+      socket.off('card-flipped');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
@@ -387,6 +405,7 @@ const GameRoom = () => {
 
   const handleGameEnded = (data) => {
     setGameEndData(data);
+    setIsSelectingCard(false); // Reset card selection state
     const winnerName = data?.winner?.username || data?.winner?.displayName || 'Người chơi';
     toast.success(`${winnerName} thắng!`);
   };
@@ -394,6 +413,8 @@ const GameRoom = () => {
   const handleGameReset = (data) => {
     setGameEndData(null);
     setShowdownData(null);
+    setIsSelectingCard(false); // Reset card selection state
+    setSelectedCardIndex(null);
     setGameState(prev => ({
       ...prev,
       phase: 'waiting',
@@ -415,11 +436,65 @@ const GameRoom = () => {
       toast.error('Không thể bắt đầu ván mới');
     }
   };
+  
+  // Handler for selecting a card to flip
+  const handleSelectCard = (cardIndex) => {
+    console.log('🎴 handleSelectCard called:', { cardIndex, isSelectingCard });
+    if (!isSelectingCard) {
+      console.log('⚠️ Not in selecting card phase, ignoring');
+      return;
+    }
+    
+    console.log('✅ Selecting card:', cardIndex);
+    setSelectedCardIndex(cardIndex);
+    setIsSelectingCard(false);
+    
+    // Emit to server
+    socketService.emit('select-card-to-flip', { roomId, cardIndex }, (response) => {
+      console.log('📡 Server response:', response);
+      if (!response.success) {
+        toast.error(response.message || 'Không thể lật bài');
+        setIsSelectingCard(true);
+        setSelectedCardIndex(null);
+      } else {
+        toast.success('Đã chọn bài!');
+      }
+    });
+  };
+
+  // Auto-flip timer: if player doesn't select within 30s, auto-select the outermost card
+  useEffect(() => {
+    if (!isSelectingCard) return undefined;
+
+    const timer = setTimeout(() => {
+      // Find current user's player object
+      const myPlayer = gameState.players.find(p => {
+        const userData = p.userId || {};
+        return userData._id === user?.id || userData._id?.toString() === user?.id;
+      });
+
+      if (!myPlayer || !myPlayer.cards || myPlayer.cards.length === 0) {
+        // nothing to auto-flip
+        return;
+      }
+
+      // Choose outermost card (last index)
+      const autoIndex = myPlayer.cards.length - 1;
+      if (selectedCardIndex === null) {
+        console.log('⏱️ Auto-selecting card index', autoIndex);
+        handleSelectCard(autoIndex);
+      }
+    }, 30000);
+
+    return () => clearTimeout(timer);
+  }, [isSelectingCard, gameState.players, selectedCardIndex, user]);
 
   // eslint-disable-next-line no-unused-vars
   const handleRestartGame = () => {
     setShowdownData(null);
     setGameEndData(null);
+    setIsSelectingCard(false);
+    setSelectedCardIndex(null);
     
     // Reset game state
     setGameState(prev => ({
@@ -448,6 +523,10 @@ const GameRoom = () => {
   };
 
   const handleAction = (action, amount = 0) => {
+    if (isSelectingCard) {
+      toast.info('Bạn phải chọn 1 lá để lật trước khi thực hiện hành động');
+      return;
+    }
     socketService.emit('player-action', {
       roomId,
       action,
@@ -512,10 +591,15 @@ const GameRoom = () => {
     };
   };
 
-  const renderCard = (card, index, isBack = false) => {
+  const renderCard = (card, index, isBack = false, isSelectable = false, onSelect = null) => {
     if (isBack) {
       return (
-        <div key={index} className="playing-card back">
+        <div 
+          key={index} 
+          className={`playing-card back ${isSelectable ? 'selectable' : ''} ${selectedCardIndex === index ? 'selected' : ''}`}
+          onClick={isSelectable && onSelect ? () => onSelect(index) : undefined}
+          style={isSelectable ? { cursor: 'pointer' } : {}}
+        >
         </div>
       );
     }
@@ -525,13 +609,23 @@ const GameRoom = () => {
     
     if (!cardObj) {
       return (
-        <div key={index} className="playing-card back">
+        <div 
+          key={index} 
+          className={`playing-card back ${isSelectable ? 'selectable' : ''} ${selectedCardIndex === index ? 'selected' : ''}`}
+          onClick={isSelectable && onSelect ? () => onSelect(index) : undefined}
+          style={isSelectable ? { cursor: 'pointer' } : {}}
+        >
         </div>
       );
     }
 
     return (
-      <div key={index} className={`playing-card ${cardObj.color}`}>
+      <div 
+        key={index} 
+        className={`playing-card ${cardObj.color} ${isSelectable ? 'selectable' : ''} ${selectedCardIndex === index ? 'selected' : ''}`}
+        onClick={isSelectable && onSelect ? () => onSelect(index) : undefined}
+        style={isSelectable ? { cursor: 'pointer' } : {}}
+      >
         <span className="card-rank">{cardObj.rank}</span>
         <span className="card-suit">{cardObj.suit}</span>
         <span className="card-rank-bottom">{cardObj.rank}</span>
@@ -570,14 +664,20 @@ const GameRoom = () => {
         </div> */}
 
         {/* Game Status Indicator */}
-        <div className={`game-status-indicator ${gameState.phase}`}>
-          {gameState.phase === 'waiting' && (
+        {/* <div className={`game-status-indicator ${gameState.phase}`}>
+          {isSelectingCard && (
+            <>
+              <span className="status-icon">🎴</span>
+              <span className="status-text">Chọn bài để lật</span>
+            </>
+          )}
+          {!isSelectingCard && gameState.phase === 'waiting' && (
             <>
               <span className="status-icon">⏳</span>
               <span className="status-text">Chờ người chơi</span>
             </>
           )}
-          {gameState.phase === 'playing' && (
+          {!isSelectingCard && gameState.phase === 'playing' && (
             <>
               <span className="status-icon">🎮</span>
               <span className="status-text">Đang chơi</span>
@@ -589,7 +689,7 @@ const GameRoom = () => {
               <span className="status-text">Lật bài</span>
             </>
           )}
-        </div>
+        </div> */}
 
         <button className="settings-button">
           ⚙️
@@ -637,12 +737,30 @@ const GameRoom = () => {
                     Đang chờ chủ phòng chia bài...
                   </div>
                 );
+              } else if (isSelectingCard) {
+                return (
+                  <div className="waiting-message card-selection-message">
+                    <div className="selection-icon">🎴</div>
+                    <div>Chọn 1 lá để lật ra</div>
+                    <div className="selection-hint">Click vào 1 trong 3 lá bài của bạn</div>
+                  </div>
+                );
               } else {
                 return (
                   <div className="pot-display">
-                    <div className="pot-total">Tổng:</div>
-                    <div className="pot-value">{formatChips(gameState.pot.total)}</div>
-                    <div className="pot-follow">Theo: {gameState.pot.follow}</div>
+                    <div className="pot-chip-icon">
+                      <div className="chip-badge">
+                        <span className="chip-value">1K</span>
+                      </div>
+                    </div>
+                    <div className="pot-row">
+                      <span className="pot-label">Tổng:</span>
+                      <span className="pot-amount">{formatChips(gameState.pot.total)}</span>
+                    </div>
+                    <div className="pot-row">
+                      <span className="pot-label">Theo:</span>
+                      <span className="pot-amount">{gameState.pot.follow}</span>
+                    </div>
                   </div>
                 );
               }
@@ -719,6 +837,60 @@ const GameRoom = () => {
                           // For current player: show all cards (both hidden and visible)
                           // This includes the initial 3 face-down cards in round 1
                           if (isMyPlayer && player.cards && player.cards.length > 0) {
+                            // Check if this is the card selection phase (round 1, all cards face down)
+                            const visibleCards = player.visibleCards || [];
+                            const isRound1 = player.cards.length === 3 && visibleCards.length === 0;
+                            
+                            // console.log('🎴 Player cards render:', {
+                            //   isMyPlayer,
+                            //   cardsLength: player.cards.length,
+                            //   visibleCardsLength: visibleCards.length,
+                            //   isRound1,
+                            //   isSelectingCard,
+                            //   selectedCardIndex
+                            // });
+                            
+                            // If in selection phase and no card selected yet
+                            if (isRound1 && isSelectingCard) {
+                              // Show all 3 cards face-up as selectable (player can see their cards)
+                              console.log('✅ Showing selectable cards (face-up)');
+                              return player.cards.map((card, index) => 
+                                renderCard(card, index, false, true, handleSelectCard)
+                              );
+                            }
+                            
+                            // If a card has been selected but not yet confirmed by server
+                            if (isRound1 && selectedCardIndex !== null && visibleCards.length === 0) {
+                              return player.cards.map((card, index) => {
+                                if (index === selectedCardIndex) {
+                                  // Show the selected card face up
+                                  return renderCard(card, index, false);
+                                } else {
+                                  // Show other cards face down
+                                  return renderCard(null, index, true);
+                                }
+                              });
+                            }
+                            
+                            // After server confirmed: show visible cards and hidden cards
+                            if (visibleCards.length > 0) {
+                              const cards = [];
+                              const hiddenCount = player.cards.length - visibleCards.length;
+                              
+                              // Hidden cards first
+                              for (let i = 0; i < hiddenCount; i++) {
+                                cards.push(renderCard(null, `hidden-${i}`, true));
+                              }
+                              
+                              // Then visible cards
+                              visibleCards.forEach((card, index) => {
+                                cards.push(renderCard(card, `visible-${index}`, false));
+                              });
+                              
+                              return cards;
+                            }
+                            
+                            // Fallback: show all cards for current player (shouldn't happen in round 1)
                             return player.cards.map((card, index) => renderCard(card, index, false));
                           }
                           
@@ -791,6 +963,7 @@ const GameRoom = () => {
                   <button 
                     className="action-button btn-fold"
                     onClick={() => handleAction('fold')}
+                    disabled={isSelectingCard}
                   >
                     <span>Bỏ bài</span>
                   </button>
@@ -798,7 +971,7 @@ const GameRoom = () => {
                   <button 
                     className="action-button btn-check"
                     onClick={() => handleAction('check')}
-                    disabled={gameState.currentBet > 0}
+                    disabled={isSelectingCard || gameState.currentBet > 0}
                   >
                     <span>Xem</span>
                   </button>
@@ -806,7 +979,7 @@ const GameRoom = () => {
                   <button 
                     className="action-button btn-call"
                     onClick={() => handleAction('call')}
-                    disabled={gameState.currentBet === 0}
+                    disabled={isSelectingCard || gameState.currentBet === 0}
                   >
                     <span>Theo ({gameState.currentBet || 0})</span>
                   </button>
@@ -817,6 +990,7 @@ const GameRoom = () => {
                   <button 
                     className="action-button btn-bet"
                     onClick={() => handleAction('bet', gameState.bettingLimits?.min || minBet)}
+                    disabled={isSelectingCard}
                   >
                     <span>Cược {formatChips(gameState.bettingLimits?.min || minBet)}</span>
                   </button>
@@ -824,7 +998,7 @@ const GameRoom = () => {
                   <button 
                     className="action-button btn-raise"
                     onClick={() => handleAction('raise', (gameState.currentBet || 0) * 2)}
-                    disabled={!gameState.currentBet}
+                    disabled={isSelectingCard || !gameState.currentBet}
                   >
                     <span>Tăng 2x</span>
                   </button>
@@ -832,6 +1006,7 @@ const GameRoom = () => {
                   <button 
                     className="action-button btn-raise"
                     onClick={() => handleAction('raise', gameState.bettingLimits?.max || maxBet)}
+                    disabled={isSelectingCard}
                   >
                     <span>Tối đa {formatChips(gameState.bettingLimits?.max || maxBet)}</span>
                   </button>

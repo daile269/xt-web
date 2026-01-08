@@ -387,6 +387,32 @@ module.exports = (io) => {
       }
     });
 
+    // Select card to flip (Xì Tố round 1)
+    socket.on('select-card-to-flip', async (data, callback) => {
+      try {
+        const { roomId, cardIndex } = data;
+        const game = activeGames.get(roomId);
+
+        if (!game) {
+          if (callback) callback({ success: false, message: 'Game not found' });
+          return;
+        }
+
+        // Validate card index
+        if (typeof cardIndex !== 'number' || cardIndex < 0 || cardIndex > 2) {
+          if (callback) callback({ success: false, message: 'Chỉ số bài không hợp lệ' });
+          return;
+        }
+
+        const result = await game.handleCardSelection(socket.userId, cardIndex);
+        
+        if (callback) callback(result);
+      } catch (error) {
+        console.error('Select card error:', error);
+        if (callback) callback({ success: false, message: error.message });
+      }
+    });
+
     // Player action (fold, check, call, bet, raise, all-in)
     socket.on('player-action', async (data, callback) => {
       try {

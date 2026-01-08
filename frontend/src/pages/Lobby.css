@@ -455,3 +455,144 @@ select.form-input option {
     font-size: 1rem;
   }
 }
+
+/* Landscape orientation */
+@media (max-height: 600px) and (orientation: landscape) {
+  .lobby-container {
+    padding: 1rem 1.5rem;
+  }
+
+  .lobby-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .lobby-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .lobby-stats {
+    gap: 1.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .stat-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .stat-icon {
+    font-size: 1.2rem;
+  }
+
+  .lobby-actions {
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .lobby-filters {
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .search-box {
+    max-width: 350px;
+    min-width: 200px;
+  }
+
+  .search-input {
+    padding: 0.6rem 2.5rem 0.6rem 0.9rem;
+    font-size: 0.9rem;
+  }
+
+  .filter-select {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .rooms-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .room-card {
+    padding: 1rem;
+  }
+
+  .room-header {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .room-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .room-status {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .room-info {
+    margin-bottom: 0.75rem;
+  }
+
+  .info-row {
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+  }
+
+  .no-rooms {
+    padding: 2rem;
+    font-size: 1rem;
+  }
+
+  /* Modal adjustments for landscape */
+  .modal-content {
+    padding: 1.5rem;
+    max-width: 450px;
+    max-height: 85vh;
+  }
+
+  .modal-content h2 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+
+  .form-group {
+    gap: 0.4rem;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  .form-input {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .form-row {
+    gap: 0.75rem;
+  }
+
+  .checkbox-label {
+    font-size: 0.9rem;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  .modal-actions {
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .modal-actions button {
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+  }
+}
