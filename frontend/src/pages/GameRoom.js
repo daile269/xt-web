@@ -89,7 +89,6 @@ const GameRoom = () => {
     
     socket.on('card-selection-phase', (data) => {
       // Người chơi bắt đầu pha chọn bài để lật
-      console.log('🎴 Card selection phase started:', data);
       setIsSelectingCard(true);
       setSelectedCardIndex(null);
       toast.info('🎴 Xem bài của bạn và chọn 1 lá để lật ra');
@@ -97,7 +96,6 @@ const GameRoom = () => {
     
     socket.on('card-flipped', (data) => {
       // Cập nhật khi có người chọn bài
-      console.log('🎴 Card flipped:', data);
       handleGameStateUpdate(data);
     });
     
@@ -233,6 +231,23 @@ const GameRoom = () => {
     }
     return undefined;
   }, [gameState.phase, gameState.timer]);
+
+  // Show landscape orientation hint on mobile devices
+  useEffect(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // Show toast after a short delay to ensure user sees it
+      const timer = setTimeout(() => {
+        toast.info('💡 Xoay ngang điện thoại để có trải nghiệm tốt nhất', {
+          autoClose: 10000,
+          position: 'bottom-center'
+        });
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []); // Only run once on mount
 
   const handleGameStateUpdate = (data) => {
     // Create a modified data object with myCards properly merged
@@ -740,7 +755,7 @@ const GameRoom = () => {
               } else if (isSelectingCard) {
                 return (
                   <div className="waiting-message card-selection-message">
-                    <div className="selection-icon">🎴</div>
+                    <div className="selection-icon"></div>
                     <div>Chọn 1 lá để lật ra</div>
                     <div className="selection-hint">Click vào 1 trong 3 lá bài của bạn</div>
                   </div>

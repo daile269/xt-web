@@ -331,7 +331,7 @@ module.exports = (io) => {
 
         // Check if user is the room creator
         if (room.createdBy.toString() !== socket.userId) {
-          if (callback) callback({ success: false, message: 'Only room creator can start the game' });
+          if (callback) callback({ success: false, message: 'Chỉ chủ phòng mới có thể bắt đầu game' });
           return;
         }
 
@@ -364,7 +364,7 @@ module.exports = (io) => {
 
         // Check if user is the room creator
         if (room.createdBy.toString() !== socket.userId) {
-          if (callback) callback({ success: false, message: 'Only room creator can start new game' });
+          if (callback) callback({ success: false, message: 'Chỉ chủ phòng mới có thể bắt đầu game mới' });
           return;
         }
 

@@ -14,9 +14,34 @@ const socketHandlers = require('./socket');
 
 const app = express();
 const server = http.createServer(app);
+
+// CORS origin checker - allow localhost and local network IPs
+const corsOrigin = (origin, callback) => {
+  // Allow requests with no origin (mobile apps, Postman, etc.)
+  if (!origin) return callback(null, true);
+  
+  // Allow localhost
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    return callback(null, true);
+  }
+  
+  // Allow local network IPs (10.x.x.x, 192.168.x.x, 172.16-31.x.x)
+  const localIpPattern = /^http:\/\/(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
+  if (localIpPattern.test(origin)) {
+    return callback(null, true);
+  }
+  
+  // Allow environment-specified frontend URL
+  if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+    return callback(null, true);
+  }
+  
+  callback(new Error('Not allowed by CORS'));
+};
+
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: corsOrigin,
     credentials: true,
     methods: ['GET', 'POST']
   },
@@ -29,7 +54,7 @@ const io = socketIo(server, {
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: corsOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
