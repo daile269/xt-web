@@ -71,8 +71,8 @@ const Navbar = () => {
     <>
       <nav className="navbar">
         <div className="navbar-container">
-          <Link to="/lobby" className="navbar-logo">
-            🎮 Poker & Xì Tố
+          <Link to={user?.isAdmin ? "/admin" : "/lobby"} className="navbar-logo">
+            🎮 {user?.isAdmin ? "Admin Control" : "Poker & Xì Tố"}
           </Link>
 
           {isMobileMenuOpen && (
@@ -83,17 +83,27 @@ const Navbar = () => {
             <button className="navbar-menu-close" onClick={() => setIsMobileMenuOpen(false)}>
               ✕
             </button>
-            <Link to="/lobby" className="navbar-item" onClick={handleLobbyClick}>Sảnh Game</Link>
-            <Link to="/shop" className="navbar-item" onClick={handleMenuItemClick}>Cửa Hàng</Link>
-            <Link to="/profile" className="navbar-item" onClick={handleMenuItemClick}>Hồ Sơ</Link>
-            {user?.isAdmin && (
-              <Link to="/admin" className="navbar-item admin" onClick={handleMenuItemClick}>Admin</Link>
+            
+            {!user?.isAdmin && (
+              <>
+                <Link to="/lobby" className="navbar-item" onClick={handleLobbyClick}>Sảnh Game</Link>
+                <Link to="/shop" className="navbar-item" onClick={handleMenuItemClick}>Cửa Hàng</Link>
+              </>
             )}
+            
+            <Link to="/profile" className="navbar-item" onClick={handleMenuItemClick}>Hồ Sơ</Link>
+            
+            {user?.isAdmin && (
+              <Link to="/admin" className="navbar-item admin" onClick={handleMenuItemClick}>Quản Trị</Link>
+            )}
+
             <div className="navbar-user-mobile">
-              <button onClick={(e) => { handleClaimDailyBonus(); handleMenuItemClick(); }} className="btn btn-gift btn-sm">
-                🎁 Nhận Quà
-              </button>
-              <span className="user-name-mobile">{user?.displayName || user?.username}</span>
+              {!user?.isAdmin && (
+                <button onClick={(e) => { handleClaimDailyBonus(); handleMenuItemClick(); }} className="btn btn-gift btn-sm">
+                  🎁 Nhận Quà
+                </button>
+              )}
+              <span className="user-name-mobile">{user?.displayName || user?.username} {user?.isAdmin && "(Admin)"}</span>
               <button onClick={(e) => { handleLogout(); handleMenuItemClick(); }} className="btn btn-danger btn-sm">
                 Đăng xuất
               </button>
@@ -101,16 +111,22 @@ const Navbar = () => {
           </div>
 
           <div className="navbar-user">
-            <div className="user-coins">
-              💲 {user?.coins?.toLocaleString() || 0}
-            </div>
+            {!user?.isAdmin && (
+              <div className="user-coins">
+                💲 {user?.coins?.toLocaleString() || 0}
+              </div>
+            )}
             <div className="user-avatar">
               <img src={user?.avatar?.startsWith('http') ? user.avatar : `${process.env.PUBLIC_URL}${user?.avatar || '/avatars/default.png'}`} alt={user?.username} />
             </div>
-            <span className="user-name">{user?.displayName || user?.username}</span>
-            <button onClick={handleClaimDailyBonus} className="btn btn-gift btn-sm navbar-gift-btn">
-              🎁 Nhận Quà
-            </button>
+            <span className="user-name">{user?.displayName || user?.username} {user?.isAdmin && "(Admin)"}</span>
+            
+            {!user?.isAdmin && (
+              <button onClick={handleClaimDailyBonus} className="btn btn-gift btn-sm navbar-gift-btn">
+                🎁 Nhận Quà
+              </button>
+            )}
+
             <button onClick={handleLogout} className="btn btn-danger btn-sm navbar-logout-btn">
               Đăng xuất
             </button>

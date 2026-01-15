@@ -160,8 +160,8 @@ export const transactionAPI = {
 // Admin
 export const adminAPI = {
   getUsers: (params) => api.get('/admin/users', { params }),
-  adjustCoins: (userId, data) => api.post(`/admin/users/${userId}/coins`, data),
-  banUser: (userId, data) => api.post(`/admin/users/${userId}/ban`, data),
+  adjustCoins: (userId, data) => api.put(`/admin/users/${userId}/coins`, data),
+  banUser: (userId, data) => api.put(`/admin/users/${userId}/ban`, data),
   getRooms: () => api.get('/admin/rooms'),
   deleteRoom: (roomId) => api.delete(`/admin/rooms/${roomId}`),
   getTransactions: (params) => api.get('/admin/transactions', { params }),

@@ -122,47 +122,6 @@ const Profile = () => {
               />
             </div>
 
-            <h3>Thông tin ngân hàng</h3>
-
-            <div className="form-group">
-              <label>Tên ngân hàng</label>
-              <input
-                type="text"
-                value={formData.bankAccount.bankName}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  bankAccount: { ...formData.bankAccount, bankName: e.target.value }
-                })}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Số tài khoản</label>
-              <input
-                type="text"
-                value={formData.bankAccount.accountNumber}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  bankAccount: { ...formData.bankAccount, accountNumber: e.target.value }
-                })}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Chủ tài khoản</label>
-              <input
-                type="text"
-                value={formData.bankAccount.accountHolder}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  bankAccount: { ...formData.bankAccount, accountHolder: e.target.value }
-                })}
-                className="form-input"
-              />
-            </div>
-
             <button type="submit" className="btn btn-primary btn-block">
               💾 Lưu thay đổi
             </button>
@@ -186,22 +145,6 @@ const Profile = () => {
               <div className="detail-row">
                 <span>Email:</span>
                 <strong>{user?.email || 'Chưa cập nhật'}</strong>
-              </div>
-            </div>
-
-            <div className="card">
-              <h2>🏦 Thông tin ngân hàng</h2>
-              <div className="detail-row">
-                <span>Ngân hàng:</span>
-                <strong>{user?.bankAccount?.bankName || 'Chưa cập nhật'}</strong>
-              </div>
-              <div className="detail-row">
-                <span>Số tài khoản:</span>
-                <strong>{user?.bankAccount?.accountNumber || 'Chưa cập nhật'}</strong>
-              </div>
-              <div className="detail-row">
-                <span>Chủ TK:</span>
-                <strong>{user?.bankAccount?.accountHolder || 'Chưa cập nhật'}</strong>
               </div>
             </div>
 
