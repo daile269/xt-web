@@ -16,4 +16,10 @@ router.get('/users', adminController.getUsers);
 router.put('/users/:userId/ban', adminController.toggleBanUser);
 router.put('/users/:userId/coins', adminController.updateUserCoins);
 
+// Item Management
+router.get('/items', adminController.getAllItems);
+router.post('/items', adminController.createItem);
+router.put('/items/:itemId', adminController.updateItem);
+router.delete('/items/:itemId', adminController.deleteItem);
+
 module.exports = router;

@@ -167,6 +167,11 @@ export const adminAPI = {
   getTransactions: (params) => api.get('/admin/transactions', { params }),
   processTransaction: (id, data) => api.put(`/admin/transactions/${id}`, data),
   getStats: () => api.get('/admin/stats'),
+  // Item Management
+  getItems: () => api.get('/admin/items'),
+  createItem: (data) => api.post('/admin/items', data),
+  updateItem: (id, data) => api.put(`/admin/items/${id}`, data),
+  deleteItem: (id) => api.delete(`/admin/items/${id}`),
 };
 
 export default api;

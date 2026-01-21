@@ -319,7 +319,7 @@ const CreateRoomModal = ({ onClose, onCreate }) => {
               onChange={(e) => setFormData({ ...formData, gameType: e.target.value })}
               className="form-input"
             >
-              <option value="poker">🃏 Poker</option>
+              {/* <option value="poker">🃏 Poker</option> */}
               <option value="xito">♠️ Xì Tố</option>
             </select>
           </div>

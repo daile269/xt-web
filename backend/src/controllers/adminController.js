@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const Item = require('../models/Item');
 
 /**
  * Get dashboard statistics - Overview only
@@ -138,3 +139,47 @@ exports.updateUserCoins = async (req, res) => {
 };
 
 
+/**
+ * Item Management
+ */
+exports.getAllItems = async (req, res) => {
+  try {
+    const items = await Item.find().sort({ createdAt: -1 });
+    res.json({ success: true, data: items });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi lấy danh sách vật phẩm' });
+  }
+};
+
+exports.createItem = async (req, res) => {
+  try {
+    const item = new Item(req.body);
+    await item.save();
+    res.json({ success: true, data: item, message: 'Đã thêm vật phẩm mới' });
+  } catch (error) {
+    console.error('Create item error:', error);
+    res.status(500).json({ success: false, message: 'Lỗi khi thêm vật phẩm' });
+  }
+};
+
+exports.updateItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const item = await Item.findByIdAndUpdate(itemId, req.body, { new: true });
+    if (!item) return res.status(404).json({ success: false, message: 'Không tìm thấy vật phẩm' });
+    res.json({ success: true, data: item, message: 'Đã cập nhật vật phẩm' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi khi cập nhật vật phẩm' });
+  }
+};
+
+exports.deleteItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const item = await Item.findByIdAndDelete(itemId);
+    if (!item) return res.status(404).json({ success: false, message: 'Không tìm thấy vật phẩm' });
+    res.json({ success: true, message: 'Đã xóa vật phẩm' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi khi xóa vật phẩm' });
+  }
+};
